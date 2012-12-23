@@ -12,12 +12,15 @@ import sys
 import optparse
 import time
 from collections import namedtuple
+import webbrowser
 
 import CoreLocation
+import requests
+import BeautifulSoup
 
 Location = namedtuple('Location', 'latitude longitude')
 
-DEFAULT_TIMEOUT = 5
+DEFAULT_TIMEOUT = 3
 DEFAULT_RETRIES = 10
 
 
@@ -25,7 +28,7 @@ class LocationServiceException(Exception):
     pass
 
 
-def whereami(timeout=DEFAULT_TIMEOUT):
+def location(timeout=DEFAULT_TIMEOUT):
     """
     Fetch and return a Location from OS X Core Location, or throw
     a LocationServiceException trying.
@@ -62,6 +65,24 @@ def whereami(timeout=DEFAULT_TIMEOUT):
     return Location(c.latitude, c.longitude)
 
 
+def geobytes_location():
+    external_ip = requests.get('http://jsonip.com/').json['ip']
+    resp = requests.post(
+            'http://www.geobytes.com/iplocator.htm?getlocation',
+            data={'ipaddress': external_ip},
+        )
+    try:
+        s = BeautifulSoup.BeautifulSoup(resp.content)
+        latitude = float(s.find('td',
+            text='Latitude').parent.findNext('input')['value'])
+        longitude = float(s.find('td',
+            text='Longitude').parent.findNext('input')['value'])
+    except Exception:
+        raise LocationServiceException('error parsing geobytes page')
+
+    return Location(latitude, longitude)
+
+
 def _create_option_parser():
     usage = \
 """%prog [options]
@@ -71,10 +92,14 @@ coordinates. Exits with status code 1 on failure."""
 
     parser = optparse.OptionParser(usage)
     parser.add_option('--timeout', action='store', dest='timeout',
-            type='float', default=10,
+            type='float', default=DEFAULT_TIMEOUT,
             help='Time to keep trying for if no location is found.')
     parser.add_option('--quiet', action='store_true', dest='quiet',
             help='Suppress any error messages.')
+    parser.add_option('--show', action='store_true',
+            help='Show result on Google Maps in a browser.')
+    parser.add_option('--approx', action='store_true',
+            help='Use a GeoIP service if Core Location fails.')
 
     return parser
 
@@ -88,10 +113,27 @@ def main():
         parser.print_help()
         sys.exit(1)
 
+    l = None
+    error = None
     try:
-        l = whereami(options.timeout)
-        print ' '.join(map(str, l))
+        l = location(options.timeout)
     except LocationServiceException, e:
+        error = e.message
+
+    if not l and options.approx:
+        try:
+            l = geobytes_location()
+        except LocationServiceException, e:
+            error = e.message
+
+    if not l:
         if not options.quiet:
-            print >> sys.stderr, e.message
+            print >> sys.stderr, error
         sys.exit(1)
+
+    print ' '.join(map(str, l))
+
+    if options.show:
+        webbrowser.open(
+                'https://maps.google.com/?q=%s+%s' % l
+            )

@@ -35,3 +35,5 @@ pyobjc-framework-Social==2.4
 pyobjc-framework-SyncServices==2.4
 pyobjc-framework-SystemConfiguration==2.4
 pyobjc-framework-WebKit==2.4
+BeautifulSoup==3.2.1
+requests==0.14.0

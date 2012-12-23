@@ -19,20 +19,43 @@ Enabling Core Location
 
 On OS X 10.6 (Mountain Lion) or later, you can enable Core Location in System Preferences, in the "Security" or "Security & Privacy" section.
 
+Using on the command-line
+-------------------------
+
+Using Core Services alone, you can just run the ``doko`` command::
+
+  $ doko
+  35.674851 139.701419
+
+However, it relies on using wifi, and being enabled. If you won't have a wifi connection, you may see this::
+
+  $ doko
+  location could not be found -- is wifi enabled?
+
+In this case, you can back off to a much more approximate service based on your external IP with the ``--approx`` command::
+
+  $ doko --approx
+  35.674 139.701
+
+This may return the location for the center of the nearest city. To debug the location returned, the ``--show`` option will open a Google Maps browser window displaying the coordinates on a map.
+
 Using as a module
 -----------------
 
 ::
 
   > import doko
-  > doko.whereami()
+  > doko.location()
   Location(latitude=35.674851, longitude=139.701419)
+  > doko.geobytes_location()  # approximate method
+  Location(latitude=35.674, longitude=139.701)
 
 
-Using on the command-line
--------------------------
+Changelog
+---------
 
-::
+0.1.0
+~~~~~
 
-  $ doko
-  35.674851 139.701419
+- Fetch latitude and longitude using Core Location
+- Provide backup method via GeoBytes page

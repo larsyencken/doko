@@ -33,5 +33,7 @@ setup(
             'pyobjc==2.4',
             'pyobjc-core==2.4',
             'pyobjc-framework-CoreLocation==2.4',
+            'BeautifulSoup==3.2.1',
+            'requests==0.14.0',
         ],
     )
