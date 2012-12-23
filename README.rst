@@ -1,7 +1,9 @@
 doko (どこ)
 =========
 
-A Python clone of Victor Jalencas's `whereami <https://github.com/victor/whereami>`_ utility, which uses CoreLocation services on OS X to determine your geographical coordinates. It requires OS X 10.6 (Mountain Lion) or later to function.
+A simple command-line utility (and module) to determine your current location.
+
+Doki is a Python clone of Victor Jalencas's `whereami <https://github.com/victor/whereami>`_ utility, using CoreLocation services on OS X to determine your geographical coordinates. It requires OS X 10.6 (Mountain Lion) or later to function.
 
 Kudos to `Rich Healey <https://github.com/richo/>`_ for getting me started.
 
