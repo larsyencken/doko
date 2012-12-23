@@ -9,6 +9,7 @@ Installing
 ----------
 
 ::
+
   $ pip install doko
 
 Enabling Core Location
@@ -20,6 +21,7 @@ Using as a module
 -----------------
 
 ::
+
   > import doko
   > doko.whereami()
   Location(latitude=35.674851, longitude=139.701419)
@@ -29,5 +31,6 @@ Using on the command-line
 -------------------------
 
 ::
+
   $ doko
   35.674851, 139.701419
