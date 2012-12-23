@@ -1,0 +1,9 @@
+.DS_Store
+*.pyc
+*.pyo
+*.orig
+*.bak
+*.tmp
+*.egg-info
+build
+dist
