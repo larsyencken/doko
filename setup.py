@@ -20,7 +20,7 @@ setup(
         version=VERSION,
         author="Lars Yencken",
         author_email="lars@yencken.org",
-        license="BSD",
+        license="ISC",
         packages=[
             'doko',
         ],
