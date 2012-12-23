@@ -1,5 +1,5 @@
 doko (どこ)
-=========
+===========
 
 A simple command-line utility (and module) to determine your current location, using Core Location, and optionally backing off to a web service.
 
