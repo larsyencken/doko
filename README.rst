@@ -1,23 +1,27 @@
 doko (どこ)
 ===========
 
-A simple command-line utility (and module) to determine your current location, using Core Location, and optionally backing off to a web service.
+A simple command-line utility (and Python module) to determine your current location.
 
-Doko is a Python clone of Victor Jalencas's `whereami <https://github.com/victor/whereami>`_ utility. It requires OS X 10.6 (Mountain Lion) or later to function.
+Doko is a clone of Victor Jalencas's `whereami <https://github.com/victor/whereami>`_ utility, but unlike whereami it supports multiple strategies for finding your location.
 
-Kudos to `Richo Healey <https://github.com/richo/>`_ for getting me started.
+Kudos to `Richo Healey <https://github.com/richo/>`_ for ideas and patches.
 
 Installing
 ----------
 
-::
+To install just GeoIP support, run::
 
   $ pip install doko
 
-Enabling Core Location
-----------------------
+However, on OS X 10.6 (Mountain Lion) or later, you can also use the much more accurate Core Location framework::
 
-On OS X 10.6 (Mountain Lion) or later, you can enable Core Location in System Preferences, in the "Security" or "Security & Privacy" section.
+  $ pip install doko[corelocation]
+
+Using Core Location
+-------------------
+
+Once you've installed the corelocation-enabled doko package, you'll need to enable Core Location in System Preferences, in the "Security" or "Security & Privacy" section. Furthermore, you must be using Wifi for it to work.
 
 Hacking
 -------
@@ -27,22 +31,14 @@ For hacking on OSX, you will likely want to install ``requires-corelocation.txt`
 Using on the command-line
 -------------------------
 
-Using Core Services alone, you can just run the ``doko`` command::
+Just run the ``doko`` command::
 
   $ doko
-  35.674851 139.701419
+  35.674,139.701
 
-However, it relies on using wifi, and being enabled. If you won't have a wifi connection, you may see this::
+This will give its best guess as to your location, depending on the strategies that are available. Use the ``--show`` option to open the location in Google Maps.
 
-  $ doko
-  location could not be found -- is wifi enabled?
-
-In this case, you can back off to a much more approximate service based on your external IP with the ``--approx`` command::
-
-  $ doko --approx
-  35.674 139.701
-
-This may return the location for the center of the nearest city. To debug the location returned, the ``--show`` option will open a Google Maps browser window displaying the coordinates on a map.
+More fine-grained control over strategies used and the precision returned is available. See ``doko --help``.
 
 Using as a module
 -----------------
@@ -50,14 +46,24 @@ Using as a module
 ::
 
   > import doko
+  > doko.location('geoip')  # on any platform
+  35.674,139.701
+  > doko.location('corelocation')  # on OS X, using Core Location
+  35.674851,139.701419
+  > doko.Location.set_precision(2)
   > doko.location()
-  Location(latitude=35.674851, longitude=139.701419)
-  > doko.geobytes_location()  # approximate method
-  Location(latitude=35.674, longitude=139.701)
+  35.67,139.70
 
 
 Changelog
 ---------
+
+0.2.0
+~~~~~
+
+- Make doko multiplatform, by making Core Location optional
+- Honour timeouts for GeoIP lookups
+- Provide control over precision to support privacy
 
 0.1.0
 ~~~~~
