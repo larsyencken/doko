@@ -26,8 +26,10 @@ except ImportError:
 import requests
 import BeautifulSoup
 
+
 class Location(namedtuple('Location', 'latitude longitude')):
     precision = None
+
     @classmethod
     def set_precision(klass, digits):
         klass.precision = digits
@@ -52,11 +54,13 @@ DEFAULT_RETRIES = 10
 
 LOCATION_STRATEGIES = OrderedDict()
 
+
 # Important, define strategies in default resolution order
 def location_strategy(name):
     def _(fn):
         LOCATION_STRATEGIES[name] = fn
     return _
+
 
 class LocationServiceException(Exception):
     pass
@@ -74,7 +78,7 @@ if CoreLocation:
 
         if not m.locationServicesEnabled():
             raise LocationServiceException(
-                    'location services not enabled -- check privacy settings in System Preferences'  # noqa
+                    'location services not enabled -- check privacy settings in System Preferences'  # nopep8
                 )
 
         if not m.locationServicesAvailable():
@@ -101,6 +105,7 @@ if CoreLocation:
         c = l.coordinate()
         return Location(c.latitude, c.longitude)
 
+
 @location_strategy("geoip")
 def geobytes_location(timeout=DEFAULT_TIMEOUT):
     external_ip = requests.get('http://jsonip.com/').json['ip']
@@ -114,10 +119,13 @@ def geobytes_location(timeout=DEFAULT_TIMEOUT):
         raise LocationServiceException('timeout fetching geoip location')
     try:
         s = BeautifulSoup.BeautifulSoup(resp.content)
-        latitude = float(s.find('td',
-            text='Latitude').parent.findNext('input')['value'])
-        longitude = float(s.find('td',
-            text='Longitude').parent.findNext('input')['value'])
+        latitude = float(s.find(
+                'td',
+                text='Latitude',
+            ).parent.findNext('input')['value'])
+        longitude = float(s.find(
+                'td', text='Longitude'
+            ).parent.findNext('input')['value'])
     except Exception:
         raise LocationServiceException('error parsing geobytes page')
 
@@ -129,22 +137,24 @@ def _create_option_parser():
 """%prog [options]
 
 Use CoreServices to find your current geolocation as latitude and longitude
-coordinates. Exits with status code 1 on failure."""
+coordinates. Exits with status code 1 on failure."""  # nopep8
 
     parser = optparse.OptionParser(usage)
-    parser.add_option('--timeout', action='store', dest='timeout',
-            type='float', default=DEFAULT_TIMEOUT,
+    parser.add_option('--timeout', action='store', type='float',
+            default=DEFAULT_TIMEOUT,
             help='Time to keep trying for if no location is found.')
-    parser.add_option('--quiet', action='store_true', dest='quiet',
+    parser.add_option('--quiet', action='store_true',
             help='Suppress any error messages.')
     parser.add_option('--show', action='store_true',
             help='Show result on Google Maps in a browser.')
     parser.add_option('-f', '--force', action='store_true', dest='force',
             help='Continue trying strategies if the first should fail')
     parser.add_option('--strategy', action='store', dest='strategy',
-            help='Strategy for location lookup (corelocation|geoip)', default=LOCATION_STRATEGIES.keys()[0])
-    parser.add_option('--precision', action='store', dest='precision', type=int,
-            help='Store geodata with <precision> significant digits', default=None)
+            help='Strategy for location lookup (corelocation|geoip)',
+            default=LOCATION_STRATEGIES.keys()[0])
+    parser.add_option('--precision', action='store', dest='precision',
+            type=int,
+            help='Store geodata with <precision> significant digits')
 
     return parser
 
