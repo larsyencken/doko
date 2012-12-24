@@ -132,6 +132,45 @@ def geobytes_location(timeout=DEFAULT_TIMEOUT):
     return Location(latitude, longitude)
 
 
+def location(strategy=None, timeout=DEFAULT_TIMEOUT, force=False):
+    """
+    Detect your current location using one the available strategies. If you
+    provide one by name, we use that. If force is True, back off to secondary
+    strategies on failure.
+    """
+    if not strategy:
+        strategy = get_default_strategy()
+
+    l = None
+    last_error = None
+
+    remaining_strategies = LOCATION_STRATEGIES.copy()
+    strategy_f = remaining_strategies.pop(strategy)
+
+    try:
+        l = strategy_f(timeout)
+    except LocationServiceException, e:
+        if not force:
+            raise
+        last_error = e.message
+
+    if not l:
+        for _, strategy in LOCATION_STRATEGIES:
+            try:
+                l = strategy()
+            except LocationServiceException, e:
+                last_error = e.message
+
+    if not l:
+        raise LocationServiceException(last_error)
+
+    return l
+
+
+def get_default_strategy():
+    return LOCATION_STRATEGIES.keys()[0]
+
+
 def _create_option_parser():
     usage = \
 """%prog [options]
@@ -151,7 +190,7 @@ coordinates. Exits with status code 1 on failure."""  # nopep8
             help='Continue trying strategies if the first should fail')
     parser.add_option('--strategy', action='store', dest='strategy',
             help='Strategy for location lookup (corelocation|geoip)',
-            default=LOCATION_STRATEGIES.keys()[0])
+            default=get_default_strategy())
     parser.add_option('--precision', action='store', dest='precision',
             type=int,
             help='Store geodata with <precision> significant digits')
@@ -180,31 +219,17 @@ def main():
     if options.precision:
         Location.set_precision(options.precision)
 
-    l = None
-    error = None
-
-    strategy = LOCATION_STRATEGIES.pop(options.strategy)
-
     try:
-        l = strategy(options.timeout)
+        l = location(options.strategy, timeout=options.timeout,
+                force=options.force)
     except LocationServiceException, e:
-        error = e.message
-
-    if not l and options.force:
-        for _, strategy in LOCATION_STRATEGIES:
-            try:
-                l = strategy()
-            except LocationServiceException, e:
-                error = e.message
-
-    if not l:
         if not options.quiet:
-            print >> sys.stderr, error
+            print >> sys.stderr, e.message
         sys.exit(1)
 
     print l
 
     if options.show:
         webbrowser.open(
-                'https://maps.google.com/?q=%s' % str(l).replace(',', '+')
+                'https://maps.google.com/?q=%s' % str(l)
             )
