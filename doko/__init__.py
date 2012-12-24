@@ -25,7 +25,9 @@ except ImportError:
 import requests
 import BeautifulSoup
 
-Location = namedtuple('Location', 'latitude longitude')
+class Location(namedtuple('Location', 'latitude longitude')):
+    def __repr__(self):
+        return "%s,%s" % (self.latitude, self.longitude)
 
 DEFAULT_TIMEOUT = 3
 DEFAULT_RETRIES = 10
@@ -161,7 +163,7 @@ def main():
             print >> sys.stderr, error
         sys.exit(1)
 
-    print ' '.join(map(str, l))
+    print(repr(l))
 
     if options.show:
         webbrowser.open(
