@@ -183,7 +183,7 @@ def main():
     if not l and options.force:
         for _, strategy in LOCATION_STRATEGIES:
             try:
-                l = geobytes_location()
+                l = strategy()
             except LocationServiceException, e:
                 error = e.message
 
@@ -192,7 +192,7 @@ def main():
             print >> sys.stderr, error
         sys.exit(1)
 
-    print(repr(l))
+    print l
 
     if options.show:
         webbrowser.open(
