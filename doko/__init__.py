@@ -14,7 +14,12 @@ import time
 from collections import namedtuple
 import webbrowser
 
-import CoreLocation
+try:
+    import CoreLocation
+except ImportError:
+    # CoreLocation attempts will fail.
+    CoreLocation = None
+
 import requests
 import BeautifulSoup
 
@@ -33,6 +38,9 @@ def location(timeout=DEFAULT_TIMEOUT):
     Fetch and return a Location from OS X Core Location, or throw
     a LocationServiceException trying.
     """
+    if not CoreLocation:
+        raise LocationServiceException('CoreLocation not available')
+
     m = CoreLocation.CLLocationManager.new()
 
     if not m.locationServicesEnabled():

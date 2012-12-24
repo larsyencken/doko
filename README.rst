@@ -19,6 +19,11 @@ Enabling Core Location
 
 On OS X 10.6 (Mountain Lion) or later, you can enable Core Location in System Preferences, in the "Security" or "Security & Privacy" section.
 
+Hacking
+-------
+
+For hacking on OSX, you will likely want to install ``requires-corelocation.txt`` as well as ``requires.txt``.
+
 Using on the command-line
 -------------------------
 

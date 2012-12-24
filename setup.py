@@ -8,9 +8,18 @@
 Package information for doko package.
 """
 
+import sys
 from setuptools import setup
 
 VERSION = '0.1.0'
+
+requires = [
+        'BeautifulSoup==3.2.1',
+        'requests==0.14.0',
+]
+if sys.platform == 'sys':
+    for package in ('pyobjc==2.4', 'pyobjc-core==2.4', 'pyobjc-framework-CoreLocation==2.4'):
+        requires.append(package)
 
 setup(
         name='doko',
@@ -29,11 +38,5 @@ setup(
                     'doko = doko:main',
                 ],
         },
-        install_requires=[
-            'pyobjc==2.4',
-            'pyobjc-core==2.4',
-            'pyobjc-framework-CoreLocation==2.4',
-            'BeautifulSoup==3.2.1',
-            'requests==0.14.0',
-        ],
+        install_requires=requires,
     )
