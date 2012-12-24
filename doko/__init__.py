@@ -64,13 +64,16 @@ def location(timeout=DEFAULT_TIMEOUT):
     c = l.coordinate()
     return Location(c.latitude, c.longitude)
 
-
-def geobytes_location():
+def geobytes_location(timeout=DEFAULT_TIMEOUT):
     external_ip = requests.get('http://jsonip.com/').json['ip']
-    resp = requests.post(
-            'http://www.geobytes.com/iplocator.htm?getlocation',
-            data={'ipaddress': external_ip},
-        )
+    try:
+        resp = requests.post(
+                'http://www.geobytes.com/iplocator.htm?getlocation',
+                data={'ipaddress': external_ip},
+                timeout=timeout,
+            )
+    except requests.exceptions.Timeout:
+        raise LocationServiceException('timeout fetching geoip location')
     try:
         s = BeautifulSoup.BeautifulSoup(resp.content)
         latitude = float(s.find('td',
