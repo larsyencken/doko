@@ -26,8 +26,25 @@ import requests
 import BeautifulSoup
 
 class Location(namedtuple('Location', 'latitude longitude')):
+    precision = None
+    @classmethod
+    def set_precision(klass, digits):
+        klass.precision = digits
+
+    def safe_value(self, value):
+        if self.precision:
+            return round(value, self.precision)
+        else:
+            return value
+
+    def safe_longitude(self):
+        return self.safe_value(self.longitude)
+
+    def safe_latitude(self):
+        return self.safe_value(self.latitude)
+
     def __repr__(self):
-        return "%s,%s" % (self.latitude, self.longitude)
+        return "%s,%s" % (self.safe_latitude(), self.safe_longitude())
 
 DEFAULT_TIMEOUT = 3
 DEFAULT_RETRIES = 10
@@ -125,6 +142,8 @@ coordinates. Exits with status code 1 on failure."""
             help='Continue trying strategies if the first should fail')
     parser.add_option('--strategy', action='store', dest='strategy',
             help='Strategy for location lookup (corelocation|geoip)', default=LOCATION_STRATEGIES.keys()[0])
+    parser.add_option('--precision', action='store', dest='precision', type=int,
+            help='Store geodata with <precision> significant digits', default=None)
 
     return parser
 
@@ -140,6 +159,9 @@ def main():
 
     if options.strategy not in LOCATION_STRATEGIES:
         raise OptionValueError("%s is not a valid strategy" % options.strategy)
+
+    if options.precision:
+        Location.set_precision(options.precision)
 
     l = None
     error = None
