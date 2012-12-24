@@ -5,7 +5,7 @@ A simple command-line utility (and module) to determine your current location, u
 
 Doko is a Python clone of Victor Jalencas's `whereami <https://github.com/victor/whereami>`_ utility. It requires OS X 10.6 (Mountain Lion) or later to function.
 
-Kudos to `Rich Healey <https://github.com/richo/>`_ for getting me started.
+Kudos to `Richo Healey <https://github.com/richo/>`_ for getting me started.
 
 Installing
 ----------
