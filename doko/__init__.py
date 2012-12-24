@@ -8,6 +8,7 @@
 Use the Core Location framework.
 """
 
+import os
 import sys
 import optparse
 from optparse import OptionValueError
@@ -159,6 +160,12 @@ def main():
 
     if options.strategy not in LOCATION_STRATEGIES:
         raise OptionValueError("%s is not a valid strategy" % options.strategy)
+
+    if os.getenv("DOKO_PRECISION"):
+        try:
+            Location.set_precision(os.getenv("DOKO_PRECISION"))
+        except ValueError:
+            raise "Invalid value in DOKO_PRECISION"
 
     if options.precision:
         Location.set_precision(options.precision)
