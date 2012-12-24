@@ -8,69 +8,110 @@
 Use the Core Location framework.
 """
 
+import os
 import sys
 import optparse
+from optparse import OptionValueError
 import time
 from collections import namedtuple
+from collections import OrderedDict
 import webbrowser
 
-import CoreLocation
+try:
+    import CoreLocation
+except ImportError:
+    # CoreLocation attempts will fail.
+    CoreLocation = None
+
 import requests
 import BeautifulSoup
 
-Location = namedtuple('Location', 'latitude longitude')
+class Location(namedtuple('Location', 'latitude longitude')):
+    precision = None
+    @classmethod
+    def set_precision(klass, digits):
+        klass.precision = digits
+
+    def safe_value(self, value):
+        if self.precision:
+            return round(value, self.precision)
+        else:
+            return value
+
+    def safe_longitude(self):
+        return self.safe_value(self.longitude)
+
+    def safe_latitude(self):
+        return self.safe_value(self.latitude)
+
+    def __repr__(self):
+        return "%s,%s" % (self.safe_latitude(), self.safe_longitude())
 
 DEFAULT_TIMEOUT = 3
 DEFAULT_RETRIES = 10
 
+LOCATION_STRATEGIES = OrderedDict()
+
+# Important, define strategies in default resolution order
+def location_strategy(name):
+    def _(fn):
+        LOCATION_STRATEGIES[name] = fn
+    return _
 
 class LocationServiceException(Exception):
     pass
 
 
-def location(timeout=DEFAULT_TIMEOUT):
-    """
-    Fetch and return a Location from OS X Core Location, or throw
-    a LocationServiceException trying.
-    """
-    m = CoreLocation.CLLocationManager.new()
+if CoreLocation:
+    @location_strategy("corelocation")
+    def corelocation_location(timeout=DEFAULT_TIMEOUT):
+        """
+        Fetch and return a Location from OS X Core Location, or throw
+        a LocationServiceException trying.
+        """
 
-    if not m.locationServicesEnabled():
-        raise LocationServiceException(
-                'location services not enabled -- check privacy settings in System Preferences'  # noqa
-            )
+        m = CoreLocation.CLLocationManager.new()
 
-    if not m.locationServicesAvailable():
-        raise LocationServiceException('location services not available')
+        if not m.locationServicesEnabled():
+            raise LocationServiceException(
+                    'location services not enabled -- check privacy settings in System Preferences'  # noqa
+                )
 
-    m.startUpdatingLocation()
-    CoreLocation.CFRunLoopStop(CoreLocation.CFRunLoopGetCurrent())
-    l = m.location()
+        if not m.locationServicesAvailable():
+            raise LocationServiceException('location services not available')
 
-    # retry up to ten times, possibly sleeping between tries
-    for i in xrange(DEFAULT_RETRIES):
-        if l:
-            break
-
-        time.sleep(float(timeout) / DEFAULT_RETRIES)
+        m.startUpdatingLocation()
         CoreLocation.CFRunLoopStop(CoreLocation.CFRunLoopGetCurrent())
         l = m.location()
 
-    if not l:
-        raise LocationServiceException(
-                'location could not be found -- is wifi enabled?'
-            )
+        # retry up to ten times, possibly sleeping between tries
+        for i in xrange(DEFAULT_RETRIES):
+            if l:
+                break
 
-    c = l.coordinate()
-    return Location(c.latitude, c.longitude)
+            time.sleep(float(timeout) / DEFAULT_RETRIES)
+            CoreLocation.CFRunLoopStop(CoreLocation.CFRunLoopGetCurrent())
+            l = m.location()
 
+        if not l:
+            raise LocationServiceException(
+                    'location could not be found -- is wifi enabled?'
+                )
 
-def geobytes_location():
+        c = l.coordinate()
+        return Location(c.latitude, c.longitude)
+
+@location_strategy("geoip")
+def geobytes_location(timeout=DEFAULT_TIMEOUT):
     external_ip = requests.get('http://jsonip.com/').json['ip']
-    resp = requests.post(
-            'http://www.geobytes.com/iplocator.htm?getlocation',
-            data={'ipaddress': external_ip},
-        )
+    try:
+        resp = requests.post(
+                'http://www.geobytes.com/iplocator.htm?getlocation',
+                data={'ipaddress': external_ip},
+                timeout=timeout,
+            )
+    except requests.exceptions.Timeout:
+        raise LocationServiceException('timeout fetching geoip location')
     try:
         s = BeautifulSoup.BeautifulSoup(resp.content)
         latitude = float(s.find('td',
@@ -98,8 +139,12 @@ coordinates. Exits with status code 1 on failure."""
             help='Suppress any error messages.')
     parser.add_option('--show', action='store_true',
             help='Show result on Google Maps in a browser.')
-    parser.add_option('--approx', action='store_true',
-            help='Use a GeoIP service if Core Location fails.')
+    parser.add_option('-f', '--force', action='store_true', dest='force',
+            help='Continue trying strategies if the first should fail')
+    parser.add_option('--strategy', action='store', dest='strategy',
+            help='Strategy for location lookup (corelocation|geoip)', default=LOCATION_STRATEGIES.keys()[0])
+    parser.add_option('--precision', action='store', dest='precision', type=int,
+            help='Store geodata with <precision> significant digits', default=None)
 
     return parser
 
@@ -113,25 +158,41 @@ def main():
         parser.print_help()
         sys.exit(1)
 
+    if options.strategy not in LOCATION_STRATEGIES:
+        raise OptionValueError("%s is not a valid strategy" % options.strategy)
+
+    if os.getenv("DOKO_PRECISION"):
+        try:
+            Location.set_precision(os.getenv("DOKO_PRECISION"))
+        except ValueError:
+            raise "Invalid value in DOKO_PRECISION"
+
+    if options.precision:
+        Location.set_precision(options.precision)
+
     l = None
     error = None
+
+    strategy = LOCATION_STRATEGIES.pop(options.strategy)
+
     try:
-        l = location(options.timeout)
+        l = strategy(options.timeout)
     except LocationServiceException, e:
         error = e.message
 
-    if not l and options.approx:
-        try:
-            l = geobytes_location()
-        except LocationServiceException, e:
-            error = e.message
+    if not l and options.force:
+        for _, strategy in LOCATION_STRATEGIES:
+            try:
+                l = geobytes_location()
+            except LocationServiceException, e:
+                error = e.message
 
     if not l:
         if not options.quiet:
             print >> sys.stderr, error
         sys.exit(1)
 
-    print ' '.join(map(str, l))
+    print(repr(l))
 
     if options.show:
         webbrowser.open(
