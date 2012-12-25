@@ -10,6 +10,7 @@ Use the Core Location framework.
 
 import os
 import sys
+import time
 import optparse
 from optparse import OptionValueError
 import time
@@ -54,6 +55,8 @@ DEFAULT_RETRIES = 10
 
 LOCATION_STRATEGIES = OrderedDict()
 
+CACHE_FILE = os.path.expanduser("~/.doko_cache")
+
 
 # Important, define strategies in default resolution order
 def location_strategy(name):
@@ -65,6 +68,31 @@ def location_strategy(name):
 class LocationServiceException(Exception):
     pass
 
+def write_to_cache(location):
+    with open(CACHE_FILE, 'w') as fh:
+        fh.write("%f %s" % (time.time(), location))
+
+@location_strategy("cache")
+def cache_location(timeout=DEFAULT_TIMEOUT):
+    """
+    Fetch and return current location from a filebacked cache, stored in ~/.doko_cache
+
+    Cache is considered value for up to 30 minutes, but refreshed each time it is queried
+    """
+    thirty_mins = (60 * 30)
+    try:
+        cache = open(CACHE_FILE).read().strip()
+        timestamp, loc = cache.split(" ")
+        if float(timestamp) + thirty_mins > time.time():
+            lat, lon = loc.split(",")
+            return Location(lat, lon)
+    except IOError:
+        # No cache file, but raising would fail without --force
+        return None
+    except ValueError:
+        # Invalid content in cache file. Nuke it and start over
+        os.unlink(cache_file)
+        return None
 
 if CoreLocation:
     @location_strategy("corelocation")
@@ -139,7 +167,7 @@ def location(strategy=None, timeout=DEFAULT_TIMEOUT, force=False):
     strategies on failure.
     """
     if not strategy:
-        strategy = get_default_strategy()
+        strategy = LOCATION_STRATEGIES.keys()[0]
 
     l = None
     last_error = None
@@ -164,12 +192,9 @@ def location(strategy=None, timeout=DEFAULT_TIMEOUT, force=False):
     if not l:
         raise LocationServiceException(last_error)
 
+    write_to_cache(l)
+
     return l
-
-
-def get_default_strategy():
-    return LOCATION_STRATEGIES.keys()[0]
-
 
 def _create_option_parser():
     usage = \
@@ -189,11 +214,12 @@ coordinates. Exits with status code 1 on failure."""  # nopep8
     parser.add_option('-f', '--force', action='store_true', dest='force',
             help='Continue trying strategies if the first should fail')
     parser.add_option('--strategy', action='store', dest='strategy',
-            help='Strategy for location lookup (corelocation|geoip)',
-            default=get_default_strategy())
+            help='Strategy for location lookup (corelocation|geoip)')
     parser.add_option('--precision', action='store', dest='precision',
             type=int,
             help='Store geodata with <precision> significant digits')
+    parser.add_option('--cache', action='store_true', dest='cache',
+            help='Consult a filebacked cache for up to 30 mins')
 
     return parser
 
@@ -207,7 +233,7 @@ def main():
         parser.print_help()
         sys.exit(1)
 
-    if options.strategy not in LOCATION_STRATEGIES:
+    if options.strategy and options.strategy not in LOCATION_STRATEGIES:
         raise OptionValueError("%s is not a valid strategy" % options.strategy)
 
     if os.getenv("DOKO_PRECISION"):
@@ -218,6 +244,9 @@ def main():
 
     if options.precision:
         Location.set_precision(options.precision)
+
+    if not (os.getenv("DOKO_CACHE") or options.cache):
+        del LOCATION_STRATEGIES['cache']
 
     try:
         l = location(options.strategy, timeout=options.timeout,
@@ -233,3 +262,4 @@ def main():
         webbrowser.open(
                 'https://maps.google.com/?q=%s' % str(l)
             )
+main()
