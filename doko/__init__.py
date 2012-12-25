@@ -47,6 +47,9 @@ class Location(namedtuple('Location', 'latitude longitude')):
     def safe_latitude(self):
         return self.safe_value(self.latitude)
 
+    def raw(self):
+        return "%s,%s" % (self.latitude, self.longitude)
+
     def __repr__(self):
         return "%s,%s" % (self.safe_latitude(), self.safe_longitude())
 
@@ -192,7 +195,7 @@ def location(strategy=None, timeout=DEFAULT_TIMEOUT, force=False):
     if not l:
         raise LocationServiceException(last_error)
 
-    write_to_cache(l)
+    write_to_cache(l.raw())
 
     return l
 
