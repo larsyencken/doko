@@ -35,12 +35,12 @@ LOCATION_STRATEGIES = OrderedDict()
 CACHE_FILE = os.path.expanduser("~/.doko_cache")
 
 
-class Location(namedtuple('Location', 'latitude longitude')):
+class Location(namedtuple('Location', 'latitude longitude source')):
     precision = None
 
     @classmethod
-    def set_precision(klass, digits):
-        klass.precision = digits
+    def set_precision(cls, digits):
+        cls.precision = digits
 
     def safe_value(self, value):
         if self.precision:
@@ -57,25 +57,37 @@ class Location(namedtuple('Location', 'latitude longitude')):
     def raw(self):
         return "%s,%s" % (self.latitude, self.longitude)
 
-    def __repr__(self):
+    def render(self):
         return "%s,%s" % (self.safe_latitude(), self.safe_longitude())
+
+    def __repr__(self):
+        return 'Location(latitude=%s, longitude=%s, source=%s)' % (
+                self.safe_latitude(),
+                self.safe_longitude(),
+                repr(self.source),
+            )
+
+    def dump(self, filename):
+        with open(filename, 'w') as ostream:
+            ostream.write('%s,%s' % (self.render(), self.source))
+
+    @classmethod
+    def load(cls, filename):
+        with open(filename, 'r') as istream:
+            cache = istream.read().strip()
+            lat, lon, source = cache.split(",")
+            return cls(float(lat), float(lon), 'cache')
 
 
 # Important, define strategies in default resolution order
 def location_strategy(name):
     def _(fn):
         LOCATION_STRATEGIES[name] = fn
-        fn._strategy_name = name
     return _
 
 
 class LocationServiceException(Exception):
     pass
-
-
-def write_to_cache(location):
-    with open(CACHE_FILE, 'w') as fh:
-        fh.write(str(location))
 
 
 @location_strategy("cache")
@@ -96,14 +108,13 @@ def cache_location(timeout=DEFAULT_TIMEOUT):
         return
 
     try:
-        cache = open(CACHE_FILE).read().strip()
-        lat, lon = map(float, cache.split(","))
-        return Location(lat, lon)
+        l = Location.load(CACHE_FILE)
     except ValueError:
         # Invalid content in cache file. Nuke it and start over
         os.unlink(CACHE_FILE)
         return
 
+    return l
 
 if CoreLocation:
     @location_strategy("corelocation")
@@ -142,7 +153,7 @@ if CoreLocation:
                 )
 
         c = l.coordinate()
-        return Location(c.latitude, c.longitude)
+        return Location(c.latitude, c.longitude, 'corelocation')
 
 
 @location_strategy("geoip")
@@ -168,7 +179,7 @@ def geobytes_location(timeout=DEFAULT_TIMEOUT):
     except Exception:
         raise LocationServiceException('error parsing geobytes page')
 
-    return Location(latitude, longitude)
+    return Location(latitude, longitude, 'geoip')
 
 
 def location(strategy=None, timeout=DEFAULT_TIMEOUT, force=False):
@@ -204,12 +215,10 @@ def location(strategy=None, timeout=DEFAULT_TIMEOUT, force=False):
         raise LocationServiceException(last_error)
 
     # success!
-    strategy_name = strategy_f._strategy_name
+    if l.source != 'cache':
+        l.dump(CACHE_FILE)
 
-    if strategy_name != 'cache':
-        write_to_cache(l.raw())
-
-    return l, strategy_name
+    return l
 
 
 def _create_option_parser():
@@ -267,7 +276,7 @@ def main():
         del LOCATION_STRATEGIES['cache']
 
     try:
-        l, s = location(options.strategy, timeout=options.timeout,
+        l = location(options.strategy, timeout=options.timeout,
                 force=options.force)
     except LocationServiceException, e:
         if not options.quiet:
@@ -275,9 +284,9 @@ def main():
         sys.exit(1)
 
     if options.show_strategy:
-        print l, '(%s)' % s
+        print l.render(), '(%s)' % l.source
     else:
-        print l
+        print l.render()
 
     if options.show:
         webbrowser.open(
