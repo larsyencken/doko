@@ -13,7 +13,6 @@ import sys
 import time
 import optparse
 from optparse import OptionValueError
-import time
 from collections import namedtuple
 from collections import OrderedDict
 import webbrowser
@@ -26,6 +25,14 @@ except ImportError:
 
 import requests
 import BeautifulSoup
+
+
+DEFAULT_TIMEOUT = 3
+DEFAULT_RETRIES = 10
+
+LOCATION_STRATEGIES = OrderedDict()
+
+CACHE_FILE = os.path.expanduser("~/.doko_cache")
 
 
 class Location(namedtuple('Location', 'latitude longitude')):
@@ -53,49 +60,50 @@ class Location(namedtuple('Location', 'latitude longitude')):
     def __repr__(self):
         return "%s,%s" % (self.safe_latitude(), self.safe_longitude())
 
-DEFAULT_TIMEOUT = 3
-DEFAULT_RETRIES = 10
-
-LOCATION_STRATEGIES = OrderedDict()
-
-CACHE_FILE = os.path.expanduser("~/.doko_cache")
-
 
 # Important, define strategies in default resolution order
 def location_strategy(name):
     def _(fn):
         LOCATION_STRATEGIES[name] = fn
+        fn._strategy_name = name
     return _
 
 
 class LocationServiceException(Exception):
     pass
 
+
 def write_to_cache(location):
     with open(CACHE_FILE, 'w') as fh:
-        fh.write("%f %s" % (time.time(), location))
+        fh.write(str(location))
+
 
 @location_strategy("cache")
 def cache_location(timeout=DEFAULT_TIMEOUT):
     """
-    Fetch and return current location from a filebacked cache, stored in ~/.doko_cache
+    Fetch and return current location from a filebacked cache, stored in
+    ~/.doko_cache
 
-    Cache is considered value for up to 30 minutes, but refreshed each time it is queried
+    Cache is considered value for up to 30 minutes, but refreshed each time
+    it is queried
     """
     thirty_mins = (60 * 30)
+    if not os.path.exists(CACHE_FILE):
+        return
+
+    last_updated = os.stat(CACHE_FILE).st_mtime
+    if last_updated + thirty_mins < time.time():
+        return
+
     try:
         cache = open(CACHE_FILE).read().strip()
-        timestamp, loc = cache.split(" ")
-        if float(timestamp) + thirty_mins > time.time():
-            lat, lon = loc.split(",")
-            return Location(lat, lon)
-    except IOError:
-        # No cache file, but raising would fail without --force
-        return None
+        lat, lon = map(float, cache.split(","))
+        return Location(lat, lon)
     except ValueError:
         # Invalid content in cache file. Nuke it and start over
-        os.unlink(cache_file)
-        return None
+        os.unlink(CACHE_FILE)
+        return
+
 
 if CoreLocation:
     @location_strategy("corelocation")
@@ -109,7 +117,7 @@ if CoreLocation:
 
         if not m.locationServicesEnabled():
             raise LocationServiceException(
-                    'location services not enabled -- check privacy settings in System Preferences'  # nopep8
+                    'location services not enabled -- check privacy settings in System Preferences'  # noqa
                 )
 
         if not m.locationServicesAvailable():
@@ -186,18 +194,23 @@ def location(strategy=None, timeout=DEFAULT_TIMEOUT, force=False):
         last_error = e.message
 
     if not l:
-        for _, strategy in LOCATION_STRATEGIES:
+        for strategy_f in remaining_strategies.itervalues():
             try:
-                l = strategy()
+                l = strategy_f()
             except LocationServiceException, e:
                 last_error = e.message
 
     if not l:
         raise LocationServiceException(last_error)
 
-    write_to_cache(l.raw())
+    # success!
+    strategy_name = strategy_f._strategy_name
 
-    return l
+    if strategy_name != 'cache':
+        write_to_cache(l.raw())
+
+    return l, strategy_name
+
 
 def _create_option_parser():
     usage = \
@@ -223,6 +236,8 @@ coordinates. Exits with status code 1 on failure."""  # nopep8
             help='Store geodata with <precision> significant digits')
     parser.add_option('--cache', action='store_true', dest='cache',
             help='Consult a filebacked cache for up to 30 mins')
+    parser.add_option('--show-strategy', action='store_true',
+            help='Include the strategy which succeeded in the output')
 
     return parser
 
@@ -252,17 +267,19 @@ def main():
         del LOCATION_STRATEGIES['cache']
 
     try:
-        l = location(options.strategy, timeout=options.timeout,
+        l, s = location(options.strategy, timeout=options.timeout,
                 force=options.force)
     except LocationServiceException, e:
         if not options.quiet:
             print >> sys.stderr, e.message
         sys.exit(1)
 
-    print l
+    if options.show_strategy:
+        print l, '(%s)' % s
+    else:
+        print l
 
     if options.show:
         webbrowser.open(
                 'https://maps.google.com/?q=%s' % str(l)
             )
-main()
