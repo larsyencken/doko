@@ -47,16 +47,23 @@ Using as a module
 
   > import doko
   > doko.location('geoip')  # on any platform
-  35.674,139.701
+  Location(latitude=35.674, longitude=139.701, source='geoip')
   > doko.location('corelocation')  # on OS X, using Core Location
-  35.674851,139.701419
+  Location(latitude=35.674851, longitude=139.701419, source='corelocation')
   > doko.Location.set_precision(2)
   > doko.location()
-  35.67,139.70
+  Location(latitude=35.67, longitude=139.70, source='corelocation')
 
 
 Changelog
 ---------
+
+devel
+~~~~~
+
+- Add a cache strategy enabled by ``--cache`` option
+- Include location source in Location tuple
+- Add ``--show-strategy`` option on the command-line
 
 0.2.0
 ~~~~~
