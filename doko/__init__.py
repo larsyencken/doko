@@ -290,5 +290,8 @@ def main():
 
     if options.show:
         webbrowser.open(
-                'https://maps.google.com/?q=%s' % str(l)
+                'https://maps.google.com/?q=%s,%s' % (
+                        l.safe_latitude(),
+                        l.safe_longitude(),
+                    )
             )
