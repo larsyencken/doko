@@ -265,7 +265,7 @@ def main():
 
     if os.getenv("DOKO_PRECISION"):
         try:
-            Location.set_precision(os.getenv("DOKO_PRECISION"))
+            Location.set_precision(int(os.getenv("DOKO_PRECISION")))
         except ValueError:
             raise "Invalid value in DOKO_PRECISION"
 
