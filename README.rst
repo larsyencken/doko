@@ -54,6 +54,18 @@ Using as a module
   > doko.location()
   Location(latitude=35.67, longitude=139.70, source='corelocation')
 
+Landmarks
+---------
+
+You can use the `doko-landmark` command to store and recall known landmarks. This is useful if you're somewhere you go often without GPS::
+
+  $ doko-landmark --add ueno-park 35.713965 139.77411
+  $ doko-landmark --list
+  ueno-park [35.713965, 139.77411]
+  $ doko  # will give its best guess
+  35.674851,139.70141
+  $ DOKO_LANDMARK=ueno-park doko  # will use the landmark
+  35.713965,139.77411
 
 Changelog
 ---------
