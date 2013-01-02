@@ -18,7 +18,9 @@ However, on OS X 10.6 (Snow Leopard) or later, you can also use the much more ac
 
   $ pip install doko[corelocation]
 
-If you want to install doko in a virtualenv sandbox, run::
+The corelocation dependencies take much longer to install, so go make a coffee. In fact, make several coffees.
+
+In either case, you can also install doko into a virtualenv sandbox instead::
 
   $ virtualenv doko-sandbox
   $ doko-sandbox/bin/pip install doko
