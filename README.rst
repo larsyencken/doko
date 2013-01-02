@@ -72,7 +72,7 @@ You can use the ``doko-landmark`` command to store known landmarks, which you ca
 Changelog
 ---------
 
-devel
+0.3.0
 ~~~~~
 
 - Add a means for storing and using known landmarks

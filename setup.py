@@ -10,7 +10,7 @@ Package information for doko package.
 
 from setuptools import setup
 
-VERSION = '0.2.0'
+VERSION = '0.3.0'
 
 requires = [
         'BeautifulSoup==3.2.1',
