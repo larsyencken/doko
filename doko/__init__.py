@@ -62,8 +62,8 @@ class Location(namedtuple('Location', 'latitude longitude source')):
 
     def __repr__(self):
         return 'Location(latitude=%s, longitude=%s, source=%s)' % (
-                self.safe_latitude(),
-                self.safe_longitude(),
+                self.latitude,
+                self.longitude,
                 repr(self.source),
             )
 
