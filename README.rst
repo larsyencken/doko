@@ -18,6 +18,13 @@ However, on OS X 10.6 (Mountain Lion) or later, you can also use the much more a
 
   $ pip install doko[corelocation]
 
+If you want to install doko in a virtualenv sandbox, run::
+
+  $ virtualenv doko-sandbox
+  $ doko-sandbox/bin/pip install doko
+
+Then you can run it from ``doko-sandbox/bin/doko``.
+
 Using Core Location
 -------------------
 
