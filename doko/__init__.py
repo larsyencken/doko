@@ -215,8 +215,7 @@ def location(strategy=None, timeout=DEFAULT_TIMEOUT, force=False):
         raise LocationServiceException(last_error)
 
     # success!
-    if l.source != 'cache':
-        l.dump(CACHE_FILE)
+    l.dump(CACHE_FILE)
 
     return l
 
