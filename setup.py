@@ -15,6 +15,7 @@ VERSION = '0.2.0'
 requires = [
         'BeautifulSoup==3.2.1',
         'requests==0.14.0',
+        'PyYAML==3.10',
     ]
 
 corelocation_requires = [
@@ -38,6 +39,7 @@ setup(
         entry_points={
             'console_scripts': [
                     'doko = doko:main',
+                    'doko-landmark = doko.landmark:main',
                 ],
         },
         install_requires=requires,

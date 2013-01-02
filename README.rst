@@ -61,6 +61,7 @@ Changelog
 devel
 ~~~~~
 
+- Add a means for storing and using known landmarks
 - Add a cache strategy enabled by ``--cache`` option
 - Include location source in Location tuple
 - Add ``--show-strategy`` option on the command-line
