@@ -14,7 +14,7 @@ To install just GeoIP support, run::
 
   $ pip install doko
 
-However, on OS X 10.6 (Mountain Lion) or later, you can also use the much more accurate Core Location framework::
+However, on OS X 10.6 (Snow Leopard) or later, you can also use the much more accurate Core Location framework::
 
   $ pip install doko[corelocation]
 
