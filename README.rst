@@ -59,7 +59,7 @@ Using as a module
 Landmarks
 ---------
 
-You can use the `doko-landmark` command to store and recall known landmarks. This is useful if you're somewhere you go often without GPS::
+You can use the ``doko-landmark`` command to store known landmarks, which you can then specify to doko using the ``DOKO_LANDMARK`` environment variable. This is useful if you're somewhere you go often without GPS::
 
   $ doko-landmark --add ueno-park 35.713965 139.77411
   $ doko-landmark --list
