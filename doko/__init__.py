@@ -16,6 +16,8 @@ from optparse import OptionValueError
 from collections import namedtuple
 from collections import OrderedDict
 import webbrowser
+import requests
+import BeautifulSoup
 
 try:
     import CoreLocation
@@ -23,9 +25,7 @@ except ImportError:
     # CoreLocation attempts will fail.
     CoreLocation = None
 
-import requests
-import BeautifulSoup
-
+import landmark
 
 DEFAULT_TIMEOUT = 3
 DEFAULT_RETRIES = 10
@@ -90,6 +90,18 @@ class LocationServiceException(Exception):
     pass
 
 
+if 'DOKO_LANDMARK' in os.environ:
+    @location_strategy("landmark")
+    def landmark_location(**kwargs):
+        name = os.environ['DOKO_LANDMARK']
+        with landmark.LandmarkStore() as s:
+            if name in s:
+                lat, lon = s[name]
+                return Location(lat, lon, 'landmark')
+
+        raise LocationServiceException('unknown landmark %s' % name)
+
+
 @location_strategy("cache")
 def cache_location(timeout=DEFAULT_TIMEOUT):
     """
@@ -128,7 +140,7 @@ if CoreLocation:
 
         if not m.locationServicesEnabled():
             raise LocationServiceException(
-                    'location services not enabled -- check privacy settings in System Preferences'  # noqa
+                    'location services not enabled -- check privacy settings in System Preferences'  # nopep8
                 )
 
         if not m.locationServicesAvailable():
@@ -198,7 +210,7 @@ def location(strategy=None, timeout=DEFAULT_TIMEOUT, force=False):
     strategy_f = remaining_strategies.pop(strategy)
 
     try:
-        l = strategy_f(timeout)
+        l = strategy_f(timeout=timeout)
     except LocationServiceException, e:
         if not force:
             raise
@@ -246,6 +258,8 @@ coordinates. Exits with status code 1 on failure."""  # nopep8
             help='Consult a filebacked cache for up to 30 mins')
     parser.add_option('--show-strategy', action='store_true',
             help='Include the strategy which succeeded in the output')
+    parser.add_option('--remember', action='store', dest='remember',
+            help='Remember this location as <landmark>')
 
     return parser
 
@@ -286,6 +300,9 @@ def main():
         print l.render(), '(%s)' % l.source
     else:
         print l.render()
+
+    if options.remember:
+        landmark.add_landmark(options.remember, l.latitude, l.longitude)
 
     if options.show:
         webbrowser.open(
