@@ -259,6 +259,8 @@ coordinates. Exits with status code 1 on failure."""  # nopep8
             help='Consult a filebacked cache for up to 30 mins')
     parser.add_option('--show-strategy', action='store_true',
             help='Include the strategy which succeeded in the output')
+    parser.add_option('--remember', action='store', dest='remember',
+            help='Remember this location as <landmark>')
 
     return parser
 
@@ -299,6 +301,9 @@ def main():
         print l.render(), '(%s)' % l.source
     else:
         print l.render()
+
+    if options.remember:
+        landmark.add_landmark(options.remember, l.latitude, l.longitude)
 
     if options.show:
         webbrowser.open(
