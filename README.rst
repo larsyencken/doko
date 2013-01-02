@@ -28,6 +28,8 @@ Hacking
 
 For hacking on OSX, you will likely want to install ``requires-corelocation.txt`` as well as ``requires.txt``.
 
+Linting the code is best done with `flake8 <http://pypi.python.org/pypi/flake8/>`_. The options used internally are ``--max-complexity=12 --ignore=E126,E123,E128``.
+
 Using on the command-line
 -------------------------
 
