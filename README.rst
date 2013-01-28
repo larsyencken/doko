@@ -81,6 +81,11 @@ You can use the ``doko-landmark`` command to store known landmarks, which you ca
 Changelog
 ---------
 
+0.3.1
+~~~~~
+
+- Make ``setup.py`` dependencies more flexible.
+
 0.3.0
 ~~~~~
 
