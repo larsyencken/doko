@@ -48,3 +48,14 @@ class TestLocationStringRepresentation(TestCase):
 
     def tearDown(self):
         doko.Location.set_precision(None)
+
+
+class GeoIPStrategyTest(TestCase):
+    def setUp(self):
+        doko.Location.set_precision(3)
+
+    def test_geoip(self):
+        l = doko.geobytes_location(ip='8.8.8.8')
+        self.assertEqual(l.safe_latitude(), 40.749)
+        self.assertEqual(l.safe_longitude(), -73.985)
+        self.assertEqual(l.strategy, 'geoip')

@@ -83,6 +83,7 @@ class Location(namedtuple('Location', 'latitude longitude source')):
 def location_strategy(name):
     def _(fn):
         LOCATION_STRATEGIES[name] = fn
+        return fn
     return _
 
 
@@ -169,12 +170,14 @@ if CoreLocation:
 
 
 @location_strategy("geoip")
-def geobytes_location(timeout=DEFAULT_TIMEOUT):
-    external_ip = requests.get('http://jsonip.com/').json['ip']
+def geobytes_location(ip=None, timeout=DEFAULT_TIMEOUT):
+    if not ip:
+        ip = requests.get('http://jsonip.com/').json['ip']
+
     try:
         resp = requests.post(
                 'http://www.geobytes.com/iplocator.htm?getlocation',
-                data={'ipaddress': external_ip},
+                data={'ipaddress': ip},
                 timeout=timeout,
             )
     except requests.exceptions.Timeout:
@@ -287,6 +290,8 @@ def main():
 
     if not (os.getenv("DOKO_CACHE") or options.cache):
         del LOCATION_STRATEGIES['cache']
+    else:
+        print 'Using cache'
 
     try:
         l = location(options.strategy, timeout=options.timeout,
