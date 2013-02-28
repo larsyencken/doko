@@ -3,6 +3,9 @@ from unittest import TestCase
 import doko
 
 class TestLocationPrecision(TestCase):
+    def setUp(self):
+        doko.Location.set_precision(None)
+
     def test_precision(self):
         l = doko.Location(123.4567, 123.4567, 'test')
         self.assertEqual(l.latitude, 123.4567)
@@ -58,4 +61,4 @@ class GeoIPStrategyTest(TestCase):
         l = doko.geobytes_location(ip='8.8.8.8')
         self.assertEqual(l.safe_latitude(), 40.749)
         self.assertEqual(l.safe_longitude(), -73.985)
-        self.assertEqual(l.strategy, 'geoip')
+        self.assertEqual(l.source, 'geoip')
