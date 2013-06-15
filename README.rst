@@ -1,6 +1,8 @@
 doko (どこ)
 ===========
 
+.. image:: https://travis-ci.org/larsyencken/doko.png
+
 A simple command-line utility (and Python module) to determine your current location.
 
 Doko is a clone of Victor Jalencas's `whereami <https://github.com/victor/whereami>`_ utility, but unlike whereami it supports multiple strategies for finding your location.
