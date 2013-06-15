@@ -62,10 +62,10 @@ class Location(namedtuple('Location', 'latitude longitude source')):
 
     def __repr__(self):
         return 'Location(latitude=%s, longitude=%s, source=%s)' % (
-                self.latitude,
-                self.longitude,
-                repr(self.source),
-            )
+            self.latitude,
+            self.longitude,
+            repr(self.source),
+        )
 
     def dump(self, filename):
         with open(filename, 'w') as ostream:
@@ -141,8 +141,8 @@ if CoreLocation:
 
         if not m.locationServicesEnabled():
             raise LocationServiceException(
-                    'location services not enabled -- check privacy settings in System Preferences'  # nopep8
-                )
+                'location services not enabled -- check privacy settings in System Preferences'  # nopep8
+            )
 
         if not m.locationServicesAvailable():
             raise LocationServiceException('location services not available')
@@ -162,8 +162,8 @@ if CoreLocation:
 
         if not l:
             raise LocationServiceException(
-                    'location could not be found -- is wifi enabled?'
-                )
+                'location could not be found -- is wifi enabled?'
+            )
 
         c = l.coordinate()
         return Location(c.latitude, c.longitude, 'corelocation')
@@ -176,21 +176,21 @@ def geobytes_location(ip=None, timeout=DEFAULT_TIMEOUT):
 
     try:
         resp = requests.post(
-                'http://www.geobytes.com/iplocator.htm?getlocation',
-                data={'ipaddress': ip},
-                timeout=timeout,
-            )
+            'http://www.geobytes.com/iplocator.htm?getlocation',
+            data={'ipaddress': ip},
+            timeout=timeout,
+        )
     except requests.exceptions.Timeout:
         raise LocationServiceException('timeout fetching geoip location')
     try:
         s = BeautifulSoup.BeautifulSoup(resp.content)
         latitude = float(s.find(
-                'td',
-                text='Latitude',
-            ).parent.findNext('input')['value'])
+            'td',
+            text='Latitude',
+        ).parent.findNext('input')['value'])
         longitude = float(s.find(
-                'td', text='Longitude'
-            ).parent.findNext('input')['value'])
+            'td', text='Longitude'
+        ).parent.findNext('input')['value'])
     except Exception:
         raise LocationServiceException('error parsing geobytes page')
 
@@ -244,25 +244,28 @@ coordinates. Exits with status code 1 on failure."""  # nopep8
 
     parser = optparse.OptionParser(usage)
     parser.add_option('--timeout', action='store', type='float',
-            default=DEFAULT_TIMEOUT,
-            help='Time to keep trying for if no location is found.')
+                      default=DEFAULT_TIMEOUT,
+                      help='Time to keep trying for if no location is found.')
     parser.add_option('--quiet', action='store_true',
-            help='Suppress any error messages.')
+                      help='Suppress any error messages.')
     parser.add_option('--show', action='store_true',
-            help='Show result on Google Maps in a browser.')
+                      help='Show result on Google Maps in a browser.')
     parser.add_option('-f', '--force', action='store_true', dest='force',
-            help='Continue trying strategies if the first should fail')
+                      help='Continue trying strategies if the first should'
+                      ' fail')
     parser.add_option('--strategy', action='store', dest='strategy',
-            help='Strategy for location lookup (corelocation|geoip)')
+                      help='Strategy for location lookup '
+                      '(corelocation|geoip)')
     parser.add_option('--precision', action='store', dest='precision',
-            type=int,
-            help='Store geodata with <precision> significant digits')
+                      type=int, help='Store geodata with <precision> '
+                      'significant digits')
     parser.add_option('--cache', action='store_true', dest='cache',
-            help='Consult a filebacked cache for up to 30 mins')
+                      help='Consult a filebacked cache for up to 30 mins')
     parser.add_option('--show-strategy', action='store_true',
-            help='Include the strategy which succeeded in the output')
+                      help='Include the strategy which succeeded in the '
+                      'output')
     parser.add_option('--remember', action='store', dest='remember',
-            help='Remember this location as <landmark>')
+                      help='Remember this location as <landmark>')
 
     return parser
 
@@ -295,7 +298,7 @@ def main():
 
     try:
         l = location(options.strategy, timeout=options.timeout,
-                force=options.force)
+                     force=options.force)
     except LocationServiceException, e:
         if not options.quiet:
             print >> sys.stderr, e.message
@@ -311,8 +314,8 @@ def main():
 
     if options.show:
         webbrowser.open(
-                'https://maps.google.com/?q=%s,%s' % (
-                        l.safe_latitude(),
-                        l.safe_longitude(),
-                    )
+            'https://maps.google.com/?q=%s,%s' % (
+                l.safe_latitude(),
+                l.safe_longitude(),
             )
+        )

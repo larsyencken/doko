@@ -85,15 +85,15 @@ def _create_option_parser():
        %prog --del name
        %prog --list
 
-Manage a database of known places."""
+Manage a database of known places."""  # nopep8
 
     parser = optparse.OptionParser(usage)
     parser.add_option('--add', action='store_true', dest='add_landmark',
-            help='Add a new landmark')
+                      help='Add a new landmark')
     parser.add_option('--del', action='store_true', dest='del_landmark',
-            help='Delete an existing landmark')
+                      help='Delete an existing landmark')
     parser.add_option('--list', action='store_true', dest='list_landmarks',
-            help='List all existing landmarks')
+                      help='List all existing landmarks')
 
     return parser
 
