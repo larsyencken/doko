@@ -28,7 +28,7 @@ setup(
         name='doko',
         description="Detect your current location.",
         long_description=open('README.rst').read(),
-        url="http://bitbucket.org/larsyencken/doko/",
+        url="http://github.com/larsyencken/doko/",
         version=VERSION,
         author="Lars Yencken",
         author_email="lars@yencken.org",
