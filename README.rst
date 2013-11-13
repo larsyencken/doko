@@ -108,3 +108,9 @@ Changelog
 
 - Fetch latitude and longitude using Core Location
 - Provide backup method via GeoBytes page
+
+
+.. image:: https://d2weczhvl823v0.cloudfront.net/larsyencken/doko/trend.png
+   :alt: Bitdeli badge
+   :target: https://bitdeli.com/free
+
