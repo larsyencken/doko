@@ -88,7 +88,7 @@ You can use the ``doko-landmark`` command to store known landmarks, which you ca
 Changelog
 ---------
 
-devel
+0.4.0
 ~~~~~
 
 - Migrate to ``geoip2`` database instead of web service

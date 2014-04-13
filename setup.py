@@ -10,7 +10,7 @@ Package information for doko package.
 
 from setuptools import setup
 
-VERSION = '0.4.0a'
+VERSION = '0.4.0'
 
 requires = [
     'PyYAML==3.11',
