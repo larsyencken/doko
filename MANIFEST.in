@@ -1,0 +1,6 @@
+include LICENSE.txt
+include MANIFEST.in
+include Makefile
+include README.rst
+include requirements-osx.txt
+include requirements.txt
