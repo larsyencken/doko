@@ -2,6 +2,7 @@ import tempfile
 from unittest import TestCase
 import doko
 
+
 class TestLocationPrecision(TestCase):
     def setUp(self):
         doko.Location.set_precision(None)
@@ -32,8 +33,10 @@ class TestLocationStringRepresentation(TestCase):
 
     def test_repr(self):
         l = doko.Location(123.4567, 123.4567, 'test')
-        self.assertEqual(repr(l),
-                "Location(latitude=123.4567, longitude=123.4567, source='test')")
+        self.assertEqual(
+            repr(l),
+            "Location(latitude=123.4567, longitude=123.4567, source='test')"
+        )
 
     def test_render(self):
         l = doko.Location(123.4567, 123.4567, 'test')
@@ -58,7 +61,7 @@ class GeoIPStrategyTest(TestCase):
         doko.Location.set_precision(3)
 
     def test_geoip(self):
-        l = doko.geobytes_location(ip='8.8.8.8')
-        self.assertEqual(l.safe_latitude(), 40.749)
-        self.assertEqual(l.safe_longitude(), -73.985)
+        l = doko.geoip_location(ip='66.171.173.250')
+        self.assertEqual(l.safe_latitude(), 45.515)
+        self.assertEqual(l.safe_longitude(), -73.574)
         self.assertEqual(l.source, 'geoip')

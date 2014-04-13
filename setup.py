@@ -10,12 +10,12 @@ Package information for doko package.
 
 from setuptools import setup
 
-VERSION = '0.3.1'
+VERSION = '0.4.0a'
 
 requires = [
-    'BeautifulSoup>=3.2.1',
-    'requests>=0.14.0',
-    'PyYAML>=3.10',
+    'PyYAML==3.11',
+    'geoip2>=0.5.1',
+    'requests>=2.2.1',
 ]
 
 corelocation_requires = [

@@ -12,25 +12,23 @@ Kudos to `Richo Healey <https://github.com/richo/>`_ for ideas and patches.
 Installing
 ----------
 
-To install just GeoIP support, run::
+With GeoIP
+~~~~~~~~~~
+
+Using GeoIP is the default. To install just GeoIP support, run::
 
   $ pip install doko
+
+Then you'll need to download a MaxMind `free GeoIP2 database <http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz>`_, unzip it and set the ``GEOIP2_FILE`` environment variable to point to it.
+
+With Core Location
+~~~~~~~~~~~~~~~~~~
 
 However, on OS X 10.6 (Snow Leopard) or later, you can also use the much more accurate Core Location framework::
 
   $ pip install doko[corelocation]
 
 The corelocation dependencies take much longer to install, so go make a coffee. In fact, make several coffees.
-
-In either case, you can also install doko into a virtualenv sandbox instead::
-
-  $ virtualenv doko-sandbox
-  $ doko-sandbox/bin/pip install doko
-
-Then you can run it from ``doko-sandbox/bin/doko``.
-
-Using Core Location
--------------------
 
 Once you've installed the corelocation-enabled doko package, you'll need to enable Core Location in System Preferences, in the "Security" or "Security & Privacy" section. Furthermore, you must be using Wifi for it to work.
 
@@ -39,7 +37,7 @@ Hacking
 
 For hacking on OSX, you will likely want to install ``requires-corelocation.txt`` as well as ``requires.txt``.
 
-Linting the code is best done with `flake8 <http://pypi.python.org/pypi/flake8/>`_. The options used internally are ``--max-complexity=12 --ignore=E126,E123,E128``.
+Run the tests with ``make test``.
 
 Using on the command-line
 -------------------------
@@ -82,6 +80,13 @@ You can use the ``doko-landmark`` command to store known landmarks, which you ca
 
 Changelog
 ---------
+
+devel
+~~~~~
+
+- Migrate to ``geoip2`` database instead of web service
+- Give instructions for downloading and installing db to ``GEOIP2_FILE``
+- Run tests and lint using ``make``
 
 0.3.1
 ~~~~~

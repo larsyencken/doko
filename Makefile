@@ -15,4 +15,4 @@ lint: env/bin/flake8
 	find doko -name '*.py' | xargs env/bin/flake8
 
 test: lint
-	python -m unittest discover test
+	env/bin/python -m unittest discover test

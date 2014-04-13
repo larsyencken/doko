@@ -16,8 +16,9 @@ from optparse import OptionValueError
 from collections import namedtuple
 from collections import OrderedDict
 import webbrowser
+
 import requests
-import BeautifulSoup
+from geoip2.database import Reader
 
 try:
     import CoreLocation
@@ -170,31 +171,35 @@ if CoreLocation:
 
 
 @location_strategy("geoip")
-def geobytes_location(ip=None, timeout=DEFAULT_TIMEOUT):
-    if not ip:
-        ip = requests.get('http://jsonip.com/').json['ip']
+def geoip_location(ip=None, timeout=DEFAULT_TIMEOUT):
+    geoip_file = os.environ.get('GEOIP2_FILE')
 
-    try:
-        resp = requests.post(
-            'http://www.geobytes.com/iplocator.htm?getlocation',
-            data={'ipaddress': ip},
-            timeout=timeout,
+    if not geoip_file or not os.path.exists(geoip_file):
+        raise LocationServiceException(
+            'no valid GEOIP2_FILE set -- please download and decompress: '
+            'http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz'  # noqa
         )
-    except requests.exceptions.Timeout:
-        raise LocationServiceException('timeout fetching geoip location')
-    try:
-        s = BeautifulSoup.BeautifulSoup(resp.content)
-        latitude = float(s.find(
-            'td',
-            text='Latitude',
-        ).parent.findNext('input')['value'])
-        longitude = float(s.find(
-            'td', text='Longitude'
-        ).parent.findNext('input')['value'])
-    except Exception:
-        raise LocationServiceException('error parsing geobytes page')
 
-    return Location(latitude, longitude, 'geoip')
+    if not ip:
+        try:
+            xff = requests.get('http://jsonip.com/').json()['ip']
+            ip = xff.split(', ')[-1]
+        except Exception:
+            raise LocationServiceException(
+                'error getting an ip -- are you online?'
+            )
+
+    reader = Reader(geoip_file)
+
+    rec = reader.omni(ip)
+    if not rec.location:
+        raise LocationServiceException(
+            'unable to geocode ip address ({0})'.format(ip)
+        )
+
+    loc = rec.location
+
+    return Location(loc.latitude, loc.longitude, 'geoip')
 
 
 def location(strategy=None, timeout=DEFAULT_TIMEOUT, force=False):
