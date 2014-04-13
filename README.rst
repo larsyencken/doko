@@ -1,7 +1,14 @@
 doko (どこ)
 ===========
 
-.. image:: https://travis-ci.org/larsyencken/doko.png
+.. image:: https://badge.fury.io/py/doko.png
+    :target: http://badge.fury.io/py/doko
+
+.. image:: https://travis-ci.org/larsyencken/doko.png?branch=master
+        :target: https://travis-ci.org/larsyencken/doko
+
+.. image:: https://pypip.in/d/doko/badge.png
+        :target: https://crate.io/packages/doko
 
 A simple command-line utility (and Python module) to determine your current location.
 
