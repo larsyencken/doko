@@ -71,7 +71,7 @@ def add_landmark(name, lat, lon):
 def list_landmarks():
     with LandmarkStore() as s:
         for name in sorted(s):
-            print name, s[name]
+            print(name, s[name])
 
 
 def del_landmark(name):

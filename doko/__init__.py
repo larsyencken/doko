@@ -26,7 +26,7 @@ except ImportError:
     # CoreLocation attempts will fail.
     CoreLocation = None
 
-import landmark
+import doko.landmark
 
 DEFAULT_TIMEOUT = 3
 DEFAULT_RETRIES = 10
@@ -89,7 +89,8 @@ def location_strategy(name):
 
 
 class LocationServiceException(Exception):
-    pass
+    def __init__(self, message):
+        self.message = message
 
 
 if 'DOKO_LANDMARK' in os.environ:
@@ -153,7 +154,7 @@ if CoreLocation:
         l = m.location()
 
         # retry up to ten times, possibly sleeping between tries
-        for i in xrange(DEFAULT_RETRIES):
+        for i in range(DEFAULT_RETRIES):
             if l:
                 break
 
@@ -209,7 +210,7 @@ def location(strategy=None, timeout=DEFAULT_TIMEOUT, force=False):
     strategies on failure.
     """
     if not strategy:
-        strategy = LOCATION_STRATEGIES.keys()[0]
+        strategy = next(iter(LOCATION_STRATEGIES.keys()))
 
     l = None
     last_error = None
@@ -219,16 +220,16 @@ def location(strategy=None, timeout=DEFAULT_TIMEOUT, force=False):
 
     try:
         l = strategy_f(timeout=timeout)
-    except LocationServiceException, e:
+    except LocationServiceException as e:
         if not force:
             raise
         last_error = e.message
 
     if not l:
-        for strategy_f in remaining_strategies.itervalues():
+        for strategy_f in remaining_strategies.values():
             try:
                 l = strategy_f()
-            except LocationServiceException, e:
+            except LocationServiceException as e:
                 last_error = e.message
 
     if not l:
@@ -299,20 +300,20 @@ def main():
     if not (os.getenv("DOKO_CACHE") or options.cache):
         del LOCATION_STRATEGIES['cache']
     else:
-        print 'Using cache'
+        print('Using cache')
 
     try:
         l = location(options.strategy, timeout=options.timeout,
                      force=options.force)
-    except LocationServiceException, e:
+    except LocationServiceException as e:
         if not options.quiet:
-            print >> sys.stderr, e.message
+            print(e.message, file=sys.stderr)
         sys.exit(1)
 
     if options.show_strategy:
-        print l.render(), '(%s)' % l.source
+        print(l.render(), '(%s)' % l.source)
     else:
-        print l.render()
+        print(l.render())
 
     if options.remember:
         landmark.add_landmark(options.remember, l.latitude, l.longitude)
