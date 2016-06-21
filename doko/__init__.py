@@ -97,7 +97,7 @@ if 'DOKO_LANDMARK' in os.environ:
     @location_strategy("landmark")
     def landmark_location(**kwargs):
         name = os.environ['DOKO_LANDMARK']
-        with landmark.LandmarkStore() as s:
+        with doko.landmark.LandmarkStore() as s:
             if name in s:
                 lat, lon = s[name]
                 return Location(lat, lon, 'landmark')
@@ -316,7 +316,7 @@ def main():
         print(l.render())
 
     if options.remember:
-        landmark.add_landmark(options.remember, l.latitude, l.longitude)
+        doko.landmark.add_landmark(options.remember, l.latitude, l.longitude)
 
     if options.show:
         webbrowser.open(
